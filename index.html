@@ -2,43 +2,741 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Racing game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <title>Coast Sprint — Arcade race</title>
     <style>
+      :root {
+        color-scheme: dark;
+        --ui: #e8eef7;
+        --panel: rgba(12, 15, 20, 0.92);
+        --accent: #5ee8a8;
+        --warn: #ffb44d;
+      }
       * {
         box-sizing: border-box;
       }
       html,
       body {
         margin: 0;
-        min-height: 100%;
-        font-family: system-ui, sans-serif;
-        background: #0c0f14;
-        color: #e8eef7;
+        height: 100%;
+        overflow: hidden;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        background: #06080c;
+        color: var(--ui);
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
       }
-      body {
+      #root {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      #game {
+        flex: 1;
+        width: 100%;
+        display: block;
+        background: #0a0d12;
+      }
+      .menu {
+        position: absolute;
+        inset: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: max(16px, env(safe-area-inset-top));
+        padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+          max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+        background: radial-gradient(ellipse 80% 60% at 50% 40%, #152030 0%, #06080c 70%);
+        z-index: 2;
+        gap: 0.75rem;
       }
-      h1 {
-        font-size: clamp(1.25rem, 4vw, 2rem);
+      .menu h1 {
+        margin: 0;
+        font-size: clamp(1.4rem, 5vw, 2.1rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .menu .tag {
         margin: 0 0 0.5rem;
-      }
-      p {
-        max-width: 36rem;
+        font-size: 0.95rem;
+        opacity: 0.78;
         text-align: center;
-        opacity: 0.85;
-        line-height: 1.5;
+        max-width: 22rem;
+        line-height: 1.45;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+        max-width: 28rem;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: var(--panel);
+        color: var(--ui);
+        padding: 0.55rem 0.9rem;
+        border-radius: 10px;
+        min-height: 44px;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      button:hover,
+      button:focus-visible {
+        border-color: var(--accent);
+        outline: none;
+      }
+      button.primary {
+        background: linear-gradient(145deg, #1a3d32, #0f2620);
+        border-color: rgba(94, 232, 168, 0.45);
+        color: #eafff5;
+      }
+      .levels {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.5rem;
+        width: min(100%, 420px);
+      }
+      .levels button {
+        text-align: left;
+        font-size: 0.88rem;
+      }
+      .hint {
+        margin-top: 0.25rem;
+        font-size: 0.78rem;
+        opacity: 0.55;
+        text-align: center;
+        max-width: 24rem;
+        line-height: 1.4;
+      }
+      .hud {
+        position: absolute;
+        left: 8px;
+        top: max(8px, env(safe-area-inset-top));
+        font-size: 12px;
+        line-height: 1.35;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+        z-index: 1;
+        pointer-events: none;
+        opacity: 0.92;
+      }
+      #touchHud {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+      }
+      .touchZone {
+        position: absolute;
+        bottom: max(16px, env(safe-area-inset-bottom));
+        height: clamp(76px, 18vh, 120px);
+        pointer-events: auto;
+      }
+      .touchZone.left {
+        left: max(12px, env(safe-area-inset-left));
+        width: min(42%, 200px);
+        background: radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.06), transparent 60%);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .touchZone.right {
+        right: max(12px, env(safe-area-inset-right));
+        width: min(42%, 200px);
+        background: radial-gradient(circle at 70% 50%, rgba(255, 255, 255, 0.06), transparent 60%);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .hidden {
+        display: none !important;
       }
     </style>
   </head>
   <body>
-    <h1>Racing game</h1>
-    <p>
-      Placeholder page. Push this repo to GitHub and enable GitHub Pages (see README) to play online on PC or iPad.
-    </p>
+    <div id="root">
+      <canvas id="game"></canvas>
+      <div id="touchHud" class="hidden" aria-hidden="true">
+        <div class="touchZone left" data-steer="-1"></div>
+        <div class="touchZone right" data-steer="1"></div>
+      </div>
+      <div id="hud" class="hud hidden"></div>
+      <div id="menu" class="menu"></div>
+    </div>
+
+    <script>
+      (function () {
+        const TAU = Math.PI * 2;
+
+        /** @typedef {{ ox:number, oy:number, ix:number, iy:number }} EllipseRace */
+        const TRACKS = [
+          { name: "Sunrise Oval", ellipse: { ox: 0, oy: 0, ix: 0, iy: 0 }, radOut: [520, 240], radIn: [380, 160], laps: 2 },
+          { name: "Harbor Curve", ellipse: { ox: -40, oy: 30, ix: -20, iy: -10 }, radOut: [480, 300], radIn: [340, 200], laps: 2 },
+          { name: "Cliff Chicane", ellipse: { ox: 70, oy: -50, ix: -40, iy: 20 }, radOut: [460, 220], radIn: [300, 120], laps: 3 },
+          { name: "Neon Speedway", ellipse: { ox: 0, oy: 0, ix: 0, iy: 0 }, radOut: [580, 200], radIn: [430, 120], laps: 2 },
+          { name: "Tight Spiral", ellipse: { ox: -60, oy: -40, ix: 35, iy: -15 }, radOut: [400, 400], radIn: [280, 280], laps: 2 },
+          { name: "Master GP", ellipse: { ox: 0, oy: -80, ix: -25, iy: 40 }, radOut: [640, 280], radIn: [480, 180], laps: 3 },
+        ];
+
+        /** @type {HTMLCanvasElement} */
+        const canvas = document.getElementById("game");
+        const ctx = canvas.getContext("2d", { alpha: false });
+        const menuEl = document.getElementById("menu");
+        const hudEl = document.getElementById("hud");
+        const touchHud = document.getElementById("touchHud");
+
+        /** @typedef {{ steer: number, accel: boolean, brake: boolean }} */
+        /** @typedef {{ keys: Partial<Record<string,boolean>>, touchSteer:number }} Inputs */
+        const inputs = [];
+        /** @type {{players:number,laps:number,ai:number,trackIndex:number}} */
+        let config = { players: 1, laps: 2, ai: 3, trackIndex: 0 };
+
+        function ellipsePoint(cx, cy, rx, ry, t) {
+          return [cx + Math.cos(t) * rx, cy + Math.sin(t) * ry];
+        }
+
+        function pointNearEllipse(px, py, cx, cy, rx, ry) {
+          if (rx < 1e-6 || ry < 1e-6) return { t: 0, x: cx, y: cy, nx: 0, ny: 1 };
+          const ux = px - cx;
+          const uy = py - cy;
+          const t = Math.atan2(uy / ry, ux / rx);
+          const sx = cx + Math.cos(t) * rx;
+          const sy = cy + Math.sin(t) * ry;
+          let nx = (px - sx) / (rx * 0.25 + Math.hypot(ux - Math.cos(t) * rx, uy - Math.sin(t) * ry));
+          let ny = (py - sy) / (ry * 0.25 + Math.hypot(ux - Math.cos(t) * rx, uy - Math.sin(t) * ry));
+          const nh = Math.hypot(px - sx, py - sy) + 1e-8;
+          nx = (px - sx) / nh;
+          ny = (py - sy) / nh;
+          return { t, x: sx, y: sy, nx, ny };
+        }
+
+        /** @typedef {{ ox:number[], oy:number[], ix:number[], iy:number[] }} TrackGeom */
+        function geomFromTrack(ti) {
+          const tr = TRACKS[ti];
+          return {
+            cxo: tr.ellipse.ox,
+            cyo: tr.ellipse.oy,
+            rxo: tr.radOut[0],
+            ryo: tr.radOut[1],
+            cxi: tr.ellipse.ix,
+            cyi: tr.ellipse.iy,
+            rxi: tr.radIn[0],
+            ryi: tr.radIn[1],
+            tcx: (tr.ellipse.ox + tr.ellipse.ix) * 0.5,
+            tcy: (tr.ellipse.oy + tr.ellipse.iy) * 0.5,
+          };
+        }
+
+        function inRoad(g, x, y) {
+          const xo = (x - g.cxo) / g.rxo;
+          const yo = (y - g.cyo) / g.ryo;
+          const xin = (x - g.cxi) / g.rxi;
+          const yin = (y - g.cyi) / g.ryi;
+          const out = xo * xo + yo * yo <= 1;
+          const inn = xin * xin + yin * yin >= 1;
+          return out && inn;
+        }
+
+        function snapToRoad(g, x, y) {
+          const po = pointNearEllipse(x, y, g.cxo, g.cyo, g.rxo, g.ryo);
+          const pi = pointNearEllipse(x, y, g.cxi, g.cyi, g.rxi, g.ryi);
+          const doo = Math.hypot(x - po.x, y - po.y);
+          const dii = Math.hypot(x - pi.x, y - pi.y);
+          if (doo < dii) {
+            const px = po.x + po.nx * 3;
+            const py = po.y + po.ny * 3;
+            return { x: px, y: py, nx: po.nx, ny: po.ny, ang: po.t };
+          }
+          const px = pi.x - pi.nx * 3;
+          const py = pi.y - pi.ny * 3;
+          return { x: px, y: py, nx: -pi.nx, ny: -pi.ny, ang: pi.t };
+        }
+
+        function carColor(i) {
+          const c = ["#5ee8a8", "#6db4ff", "#ffb44d", "#e77bff"];
+          return c[i % c.length];
+        }
+
+        function makeCar(i, g, startAngle) {
+          const cx = g.tcx;
+          const cy = g.tcy;
+          const midRx = ((g.rxo + g.rxi) * 0.5 * 0.96) + i * 3;
+          const midRy = ((g.ryo + g.ryi) * 0.5 * 0.96) + i * 3;
+          const px = cx + Math.cos(startAngle) * midRx;
+          const py = cy + Math.sin(startAngle) * midRy;
+          const tx = cx + Math.cos(startAngle + 0.06) * midRx - px;
+          const ty = cy + Math.sin(startAngle + 0.06) * midRy - py;
+          const ang = Math.atan2(ty, tx);
+          const prog0 = ((((Math.atan2(py - cy, px - cx) + TAU / 4) % TAU) + TAU) % TAU) / TAU;
+          return {
+            i,
+            x: px,
+            y: py,
+            ang,
+            vx: Math.cos(ang) * 120,
+            vy: Math.sin(ang) * 120,
+            completedLaps: 0,
+            progress: prog0,
+            finished: false,
+            finishRank: null,
+          };
+        }
+
+        let cars = [];
+        let geom = null;
+        /** @type {number} */
+        let startTime = 0;
+        let finishedCount = 0;
+        /** @type {number|null} */
+        let countdown = null;
+        /** Race clock after GO — lap line ignored until after this time */
+        let lapUnlockAt = 0;
+        /** @type {number} */
+        let lastT = 0;
+        let resultsActive = false;
+        let touchBound = false;
+
+        function bindTouchOnce() {
+          if (touchBound) return;
+          touchBound = true;
+          touchHud.querySelectorAll(".touchZone").forEach((z) => {
+            const go = (e) => {
+              e.preventDefault();
+              const s = +z.getAttribute("data-steer");
+              if (inputs[0]) inputs[0].touchSteer = s;
+            };
+            const stop = (e) => {
+              e.preventDefault();
+              if (inputs[0]) inputs[0].touchSteer = 0;
+            };
+            z.addEventListener("touchstart", go, { passive: false });
+            z.addEventListener("touchmove", go, { passive: false });
+            z.addEventListener("touchend", stop, { passive: false });
+            z.addEventListener("touchcancel", stop, { passive: false });
+          });
+        }
+
+        /** @param {number} i player index binding */
+        function bindInput(i, keymap) {
+          inputs[i] = { keys: {}, touchSteer: 0, keymap };
+        }
+
+        const keyMaps = [
+          { left: ["ArrowLeft", "a", "A"], right: ["ArrowRight", "d", "D"], up: ["ArrowUp", "w", "W"], down: ["ArrowDown", "s", "S"] },
+          { left: ["j", "J"], right: ["l", "L"], up: ["i", "I"], down: ["k", "K"] },
+          { left: ["v", "V"], right: ["n", "N"], up: ["f", "F"], down: ["c", "C"] },
+          { left: ["4", "Numpad4"], right: ["6", "Numpad6"], up: ["8", "Numpad8"], down: ["5", "Numpad5"] },
+        ];
+
+        function setMenu() {
+          hudEl.classList.add("hidden");
+          touchHud.classList.add("hidden");
+          menuEl.classList.remove("hidden");
+          menuEl.innerHTML = `
+            <h1>Coast Sprint</h1>
+            <p class="tag">Arcade oval racing — beat the bots, climb the levels. Works on PC &amp; iPad.</p>
+            <div class="row">
+              <button type="button" class="primary" data-mode="1">1 player</button>
+              <button type="button" data-mode="2">2 players</button>
+              <button type="button" data-mode="4">4 players</button>
+            </div>
+            <p class="hint">PC: arrows + WASD / IJKL / FVNC / numpad. Touch: hold left/right of screen to steer, auto throttle.</p>
+          `;
+          menuEl.querySelectorAll("[data-mode]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              config.players = +btn.getAttribute("data-mode");
+              showLevelSelect();
+            });
+          });
+        }
+
+        function showLevelSelect() {
+          menuEl.innerHTML = `
+            <h1>Pick a track</h1>
+            <p class="tag">${config.players} human driver(s) · choose difficulty by track</p>
+            <div class="levels">
+              ${TRACKS.map(
+                (t, i) =>
+                  `<button type="button" data-level="${i}"><strong>${t.name}</strong><br /><span style="opacity:.7">${t.laps} laps</span></button>`
+              ).join("")}
+            </div>
+            <div class="row">
+              <button type="button" id="back">Back</button>
+            </div>
+          `;
+          menuEl.querySelectorAll("[data-level]").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              config.trackIndex = +btn.getAttribute("data-level");
+              config.laps = TRACKS[config.trackIndex].laps;
+              startRace();
+            });
+          });
+          menuEl.querySelector("#back").addEventListener("click", setMenu);
+        }
+
+        function resize() {
+          const dpr = Math.min(2, window.devicePixelRatio || 1);
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          canvas.width = Math.floor(w * dpr);
+          canvas.height = Math.floor(h * dpr);
+          canvas.style.width = w + "px";
+          canvas.style.height = h + "px";
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        function startRace() {
+          menuEl.classList.add("hidden");
+          hudEl.classList.remove("hidden");
+          touchHud.classList.remove("hidden");
+          geom = geomFromTrack(config.trackIndex);
+          const totalSlots = Math.max(4, config.players + 3);
+          const humans = config.players;
+          const aiCount = Math.max(0, 4 - humans);
+          config.ai = aiCount;
+          cars = [];
+          const spread = (TAU / 8) * 0.35;
+          for (let p = 0; p < 4; p++) {
+            const st = -TAU / 4 - p * spread;
+            cars.push(makeCar(p, geom, st));
+          }
+          for (let p = 0; p < 4; p++) bindInput(p, keyMaps[p]);
+          finishedCount = 0;
+          startTime = performance.now();
+          countdown = 3;
+          lastT = startTime;
+          lapUnlockAt = 0;
+          bindTouchOnce();
+        }
+
+        function keyActive(inp, kind) {
+          const km = inp.keymap;
+          const arr = km[kind];
+          for (const k of arr) if (inp.keys[k]) return true;
+          return false;
+        }
+
+        function tickAi(car, dt) {
+          const g = geom;
+          const midRx = ((g.rxo + g.rxi) * 0.5) * 0.94;
+          const midRy = ((g.ryo + g.ryi) * 0.5) * 0.94;
+          const targetT = car.progress * TAU + TAU * 0.05 + car.i * 0.02;
+          const tx = g.tcx + Math.cos(targetT) * midRx;
+          const ty = g.tcy + Math.sin(targetT) * midRy;
+          const dx = tx - car.x;
+          const dy = ty - car.y;
+          const targetAng = Math.atan2(dy, dx);
+          let diff = targetAng - car.ang;
+          while (diff > Math.PI) diff -= TAU;
+          while (diff < -Math.PI) diff += TAU;
+          const steer = Math.max(-1, Math.min(1, diff * 2.2));
+          const throttle = 0.85 + Math.sin(performance.now() * 0.003 + car.i) * 0.08;
+          applyCarPhysics(car, dt, steer, throttle, 0);
+        }
+
+        function applyCarPhysics(car, dt, steer, throttle, brake) {
+          const g = geom;
+          const maxV = 520;
+          const accel = 520;
+          const turn = 2.4;
+          const fric = 0.985;
+          car.ang += steer * turn * dt * Math.min(1, Math.hypot(car.vx, car.vy) / 200);
+          const cs = Math.cos(car.ang);
+          const sn = Math.sin(car.ang);
+          if (throttle > 0) {
+            car.vx += cs * accel * throttle * dt;
+            car.vy += sn * accel * throttle * dt;
+          }
+          if (brake > 0) {
+            car.vx *= 1 - brake * 0.12;
+            car.vy *= 1 - brake * 0.12;
+          }
+          car.vx *= fric;
+          car.vy *= fric;
+          const sp = Math.hypot(car.vx, car.vy);
+          if (sp > maxV) {
+            const r = maxV / sp;
+            car.vx *= r;
+            car.vy *= r;
+          }
+          let nx = car.x + car.vx * dt;
+          let ny = car.y + car.vy * dt;
+          if (!inRoad(g, nx, ny)) {
+            const snp = snapToRoad(g, nx, ny);
+            const sp2 = Math.hypot(car.vx, car.vy);
+            const dot = car.vx * snp.nx + car.vy * snp.ny;
+            car.vx -= 2 * dot * snp.nx;
+            car.vy -= 2 * dot * snp.ny;
+            car.vx *= 0.75;
+            car.vy *= 0.75;
+            car.x = snp.x;
+            car.y = snp.y;
+            if (sp2 > 40) {
+              car.vx += snp.nx * 20;
+              car.vy += snp.ny * 20;
+            }
+          } else {
+            car.x = nx;
+            car.y = ny;
+          }
+          const ang = Math.atan2(car.y - g.tcy, car.x - g.tcx);
+          let prog = (ang + TAU / 4) / TAU;
+          if (prog < 0) prog += 1;
+          if (prog >= 1) prog -= 1;
+          const prev = car.progress;
+          const crossed = prev > 0.82 && prog < 0.2;
+          const now = performance.now();
+          if (crossed && now >= lapUnlockAt) {
+            const human = car.i < config.players;
+            if (human && !car.finished) {
+              car.completedLaps++;
+              if (car.completedLaps >= config.laps) {
+                car.finished = true;
+                finishedCount++;
+                car.finishRank = finishedCount;
+              }
+            }
+          }
+          car.progress = prog;
+        }
+
+        function drawWorld(vx, vy, vw, vh, follow) {
+          const g = geom;
+          const pad = 80;
+          const scale = Math.min(vw, vh) / (Math.max(g.rxo, g.ryo) * 2 + pad);
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(vx, vy, vw, vh);
+          ctx.clip();
+          ctx.translate(vx + vw / 2, vy + vh / 2);
+          ctx.scale(scale, scale);
+          ctx.translate(-follow.x, -follow.y);
+
+          const grd = ctx.createLinearGradient(-800, -800, 800, 800);
+          grd.addColorStop(0, "#172030");
+          grd.addColorStop(1, "#0e1520");
+          ctx.fillStyle = grd;
+          ctx.fillRect(-2500, -2500, 5000, 5000);
+
+          ctx.strokeStyle = "rgba(230,238,246,.06)";
+          ctx.lineWidth = 4 / scale;
+          ctx.beginPath();
+          for (let t = 0; t <= 80; t++) {
+            const a = (t / 80) * TAU;
+            const midRx = (g.rxo + g.rxi) * 0.5;
+            const midRy = (g.ryo + g.ryi) * 0.5;
+            const mx = g.cxo + Math.cos(a) * midRx * 1.03;
+            const my = g.cyo + Math.sin(a) * midRy * 1.03;
+            if (t === 0) ctx.moveTo(mx, my);
+            else ctx.lineTo(mx, my);
+          }
+          ctx.stroke();
+
+          ctx.strokeStyle = "rgba(230,238,246,.08)";
+          ctx.lineWidth = 8 / scale;
+          ctx.beginPath();
+          ellipsePath(ctx, g.cxo, g.cyo, g.rxo + 35, g.ryo + 35);
+          ctx.stroke();
+          ctx.beginPath();
+          ellipsePath(ctx, g.cxi, g.cyi, g.rxi - 35, g.ryi - 35);
+          ctx.stroke();
+
+          ctx.strokeStyle = "rgba(230,238,246,.25)";
+          ctx.lineWidth = 3 / scale;
+          ctx.setLineDash([(18 / scale) | 0, (14 / scale) | 0]);
+          ctx.beginPath();
+          ellipsePath(ctx, (g.cxo + g.cxi) * 0.5, (g.cyo + g.cyi) * 0.5, ((g.rxo + g.rxi) / 2) * 0.98, ((g.ryo + g.ryi) / 2) * 0.98);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.lineWidth = 2 / scale;
+          ctx.fillStyle = "rgba(230,238,246,.5)";
+          ctx.beginPath();
+          ctx.arc(
+            g.tcx + Math.cos(-TAU / 4) * ((g.rxo + g.rxi) / 2) * 0.92,
+            g.tcy + Math.sin(-TAU / 4) * ((g.ryo + g.ryi) / 2) * 0.92,
+            10 / scale,
+            0,
+            TAU
+          );
+          ctx.fill();
+
+          for (const car of cars) {
+            ctx.save();
+            ctx.translate(car.x, car.y);
+            ctx.rotate(car.ang);
+            const w = 18;
+            const h = 9;
+            ctx.fillStyle = carColor(car.i);
+            ctx.shadowColor = carColor(car.i);
+            ctx.shadowBlur = 12;
+            ctx.beginPath();
+            drawCarBody(ctx, -w / 2, -h / 2, w, h, 3);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = "rgba(12,15,20,.6)";
+            ctx.fillRect(-w / 2 + 2, -h / 2 + 2, w - 6, h - 4);
+            ctx.restore();
+          }
+          ctx.restore();
+        }
+
+        function drawCarBody(c, x, y, w, h, r) {
+          if (typeof c.roundRect === "function") c.roundRect(x, y, w, h, r);
+          else c.rect(x, y, w, h);
+        }
+
+        function ellipsePath(c, cx, cy, rx, ry) {
+          for (let t = 0; t <= 64; t++) {
+            const a = (t / 64) * TAU;
+            const x = cx + Math.cos(a) * rx;
+            const y = cy + Math.sin(a) * ry;
+            if (t === 0) c.moveTo(x, y);
+            else c.lineTo(x, y);
+          }
+          c.closePath();
+        }
+
+        window.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" && resultsActive) {
+            setMenu();
+            resultsActive = false;
+            geom = null;
+            cars = [];
+            return;
+          }
+          for (let p = 0; p < inputs.length; p++) {
+            if (!inputs[p]) continue;
+            inputs[p].keys[e.key] = true;
+          }
+        });
+        window.addEventListener("keyup", (e) => {
+          for (let p = 0; p < inputs.length; p++) {
+            if (!inputs[p]) continue;
+            inputs[p].keys[e.key] = false;
+          }
+        });
+
+        function frame(now) {
+          const dt = Math.min(0.033, (now - lastT) / 1000);
+          lastT = now;
+
+          if (countdown !== null) {
+            const elapsed = (now - startTime) / 1000;
+            countdown = 3 - Math.floor(elapsed);
+            if (countdown < 0) {
+              countdown = null;
+              lapUnlockAt = performance.now() + 1800;
+            }
+          }
+
+          const g = geom;
+          if (g && cars.length && countdown === null) {
+            for (let p = 0; p < config.players; p++) {
+              if (cars[p].finished) continue;
+              const inp = inputs[p];
+              let steer = 0;
+              if (keyActive(inp, "left")) steer -= 1;
+              if (keyActive(inp, "right")) steer += 1;
+              if (p === 0 && inp.touchSteer) steer += inp.touchSteer;
+              const touch = "ontouchstart" in window;
+              let th = 0;
+              if (keyActive(inp, "up")) th = 1;
+              else if (touch && p === 0) th = 0.9;
+              const br = keyActive(inp, "down") ? 1 : 0;
+              applyCarPhysics(cars[p], dt, steer, th, br);
+            }
+            for (let b = config.players; b < 4; b++) {
+              if (!cars[b].finished) tickAi(cars[b], dt);
+            }
+          }
+
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          ctx.fillStyle = "#06080c";
+          ctx.fillRect(0, 0, w, h);
+
+          if (geom && cars.length) {
+            const n = config.players;
+            if (n === 1) {
+              drawWorld(0, 0, w, h, cars[0]);
+            } else if (n === 2) {
+              drawWorld(0, 0, w, h * 0.5, cars[0]);
+              drawWorld(0, h * 0.5, w, h * 0.5, cars[1]);
+            } else {
+              const hw = w * 0.5;
+              const hh = h * 0.5;
+              drawWorld(0, 0, hw, hh, cars[0]);
+              drawWorld(hw, 0, hw, hh, cars[1]);
+              drawWorld(0, hh, hw, hh, cars[2]);
+              drawWorld(hw, hh, hw, hh, cars[3]);
+            }
+          }
+
+          if (countdown !== null && countdown >= 0) {
+            ctx.fillStyle = "rgba(6,8,12,.45)";
+            ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle = "#e8eef7";
+            ctx.font = "bold " + Math.min(w, h) * 0.18 + "px system-ui";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const msg = countdown > 0 ? String(countdown) : "GO";
+            ctx.fillText(msg, w / 2, h / 2);
+          }
+
+          let hud = "";
+          if (geom && cars[0]) {
+            const t = TRACKS[config.trackIndex];
+            const cur = Math.min(config.laps, cars[0].completedLaps + 1);
+            hud = `${t.name} · Lap ${cur}/${config.laps}`;
+            if (cars[0].finished) hud += " · Finished P" + cars[0].finishRank;
+          }
+          hudEl.textContent = hud;
+
+          const allDone = !!(cars.length && cars.slice(0, config.players).every((c) => c.finished));
+          resultsActive = allDone && !!geom && countdown === null;
+          if (resultsActive) touchHud.classList.add("hidden");
+          else if (geom && menuEl.classList.contains("hidden")) touchHud.classList.remove("hidden");
+          if (allDone && geom) {
+            ctx.fillStyle = "rgba(6,8,12,.55)";
+            ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle = "#e8eef7";
+            ctx.font = "600 " + Math.min(w, h) * 0.06 + "px system-ui";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const lines = cars
+              .slice(0, config.players)
+              .map((c) => `P${c.i + 1}: place ${c.finishRank}`)
+              .join(" · ");
+            ctx.fillText("Race complete", w / 2, h / 2 - 20);
+            ctx.font = "400 " + Math.min(w, h) * 0.035 + "px system-ui";
+            ctx.fillText(lines, w / 2, h / 2 + 22);
+            ctx.fillText("Tap or press Enter for menu", w / 2, h / 2 + 58);
+          }
+
+          requestAnimationFrame(frame);
+        }
+
+        window.addEventListener(
+          "pointerdown",
+          (e) => {
+            if (!resultsActive || !geom) return;
+            if (!menuEl.classList.contains("hidden")) return;
+            e.preventDefault();
+            setMenu();
+            resultsActive = false;
+            geom = null;
+            cars = [];
+          },
+          true
+        );
+
+        requestAnimationFrame(frame);
+
+        setMenu();
+      })();
+    </script>
   </body>
 </html>
