@@ -1,18 +1,17 @@
 <!DOCTYPE html>
-<!-- Coast Sprint live build — if you still see the old "Placeholder page" text, GitHub has not received this file yet; re-upload or push index.html -->
+<!-- Aurora Ridge — pseudo-3D adventure racer. Push to repo root for GitHub Pages -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
     <meta http-equiv="Cache-Control" content="no-cache" />
-    <title>Coast Sprint — Arcade race</title>
+    <title>Aurora Ridge — Adventure Run</title>
     <style>
       :root {
         color-scheme: dark;
-        --ui: #e8eef7;
-        --panel: rgba(12, 15, 20, 0.92);
-        --accent: #5ee8a8;
-        --warn: #ffb44d;
+        --ui: #f0f6ff;
+        --glass: rgba(12, 18, 36, 0.78);
+        --accent: #6ef0d8;
       }
       * {
         box-sizing: border-box;
@@ -22,144 +21,166 @@
         margin: 0;
         height: 100%;
         overflow: hidden;
-        font-family: ui-sans-serif, system-ui, sans-serif;
-        background: #06080c;
+        font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+        background: #070a14;
         color: var(--ui);
         touch-action: none;
         user-select: none;
-        -webkit-user-select: none;
       }
-      #root {
+      #wrap {
         position: fixed;
         inset: 0;
-        display: flex;
-        flex-direction: column;
       }
       #game {
-        flex: 1;
-        width: 100%;
         display: block;
-        background: #0a0d12;
+        width: 100%;
+        height: 100%;
+        background: #0a1528;
       }
-      .menu {
+      #overlay {
         position: absolute;
         inset: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-          max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-        background: radial-gradient(ellipse 80% 60% at 50% 40%, #152030 0%, #06080c 70%);
-        z-index: 2;
+        padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
+          max(16px, env(safe-area-inset-left));
+        background: radial-gradient(ellipse 90% 70% at 50% 30%, #1a2850 0%, #060912 75%);
+        z-index: 5;
         gap: 0.75rem;
       }
-      .menu h1 {
+      #overlay h1 {
         margin: 0;
-        font-size: clamp(1.4rem, 5vw, 2.1rem);
+        font-size: clamp(1.6rem, 6vw, 2.4rem);
         font-weight: 800;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.03em;
+        background: linear-gradient(120deg, #b8f4ff, #6ef0d8, #ffd88a);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
       }
-      .menu .tag {
+      #overlay .sub {
         margin: 0 0 0.5rem;
-        font-size: 0.95rem;
-        opacity: 0.78;
-        text-align: center;
         max-width: 22rem;
+        text-align: center;
+        font-size: 0.95rem;
+        opacity: 0.85;
         line-height: 1.45;
       }
-      .row {
+      .rows {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
         justify-content: center;
         max-width: 28rem;
       }
-      button {
+      .rows button {
         font: inherit;
         cursor: pointer;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        background: var(--panel);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: var(--glass);
         color: var(--ui);
-        padding: 0.55rem 0.9rem;
-        border-radius: 10px;
-        min-height: 44px;
-        transition: background 0.15s, border-color 0.15s;
+        padding: 0.6rem 1rem;
+        border-radius: 12px;
+        min-height: 48px;
+        text-align: left;
+        transition: border-color 0.15s, transform 0.1s;
       }
-      button:hover,
-      button:focus-visible {
+      .rows button:hover,
+      .rows button:focus-visible {
         border-color: var(--accent);
         outline: none;
       }
-      button.primary {
-        background: linear-gradient(145deg, #1a3d32, #0f2620);
-        border-color: rgba(94, 232, 168, 0.45);
-        color: #eafff5;
+      .rows button:active {
+        transform: scale(0.98);
       }
-      .levels {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 0.5rem;
-        width: min(100%, 420px);
+      .rows button strong {
+        display: block;
+        font-size: 0.95rem;
       }
-      .levels button {
-        text-align: left;
-        font-size: 0.88rem;
+      .rows button span {
+        font-size: 0.78rem;
+        opacity: 0.7;
+      }
+      .rows button.primary {
+        background: linear-gradient(160deg, rgba(40, 120, 120, 0.45), rgba(15, 40, 50, 0.95));
+        border-color: rgba(110, 240, 216, 0.38);
       }
       .hint {
-        margin-top: 0.25rem;
-        font-size: 0.78rem;
+        margin-top: 0.75rem;
+        font-size: 0.75rem;
         opacity: 0.55;
         text-align: center;
-        max-width: 24rem;
-        line-height: 1.4;
+        max-width: 26rem;
+        line-height: 1.55;
       }
-      .hud {
+      #hud {
         position: absolute;
-        left: 8px;
-        top: max(8px, env(safe-area-inset-top));
+        left: 10px;
+        top: max(10px, env(safe-area-inset-top));
+        right: auto;
+        z-index: 2;
         font-size: 12px;
-        line-height: 1.35;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
-        z-index: 1;
+        line-height: 1.38;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 14px rgba(0, 20, 40, 0.8);
         pointer-events: none;
-        opacity: 0.92;
       }
-      #touchHud {
+      #touchCtrl {
         position: absolute;
         inset: 0;
-        z-index: 1;
+        z-index: 3;
         pointer-events: none;
       }
-      #touchSteerPad {
+      #touchCtrl .pad {
         position: absolute;
-        left: max(10px, env(safe-area-inset-left));
-        right: max(10px, env(safe-area-inset-right));
-        bottom: max(12px, env(safe-area-inset-bottom));
-        height: clamp(100px, 24vh, 160px);
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        bottom: max(10px, env(safe-area-inset-bottom));
+        height: clamp(110px, 28vh, 190px);
         pointer-events: auto;
-        border-radius: 16px;
+        border-radius: 18px;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        background: linear-gradient(180deg, rgba(30, 38, 52, 0.45) 0%, rgba(12, 16, 24, 0.75) 100%);
+        background: linear-gradient(180deg, rgba(30, 45, 80, 0.35), rgba(8, 12, 22, 0.65));
         touch-action: none;
       }
-      #touchGas {
+      #touchCtrl .gas {
         position: absolute;
-        right: max(10px, env(safe-area-inset-right));
-        bottom: calc(max(12px, env(safe-area-inset-bottom)) + clamp(100px, 24vh, 160px) + 8px);
-        width: min(120px, 28vw);
-        height: clamp(56px, 12vh, 88px);
+        right: max(8px, env(safe-area-inset-right));
+        bottom: calc(max(10px, env(safe-area-inset-bottom)) + clamp(110px, 28vh, 190px) + 10px);
+        width: min(130px, 30vw);
+        height: clamp(56px, 13vh, 92px);
         pointer-events: auto;
-        border-radius: 14px;
-        border: 1px solid rgba(94, 232, 168, 0.35);
-        background: linear-gradient(180deg, rgba(40, 90, 72, 0.5), rgba(15, 40, 32, 0.85));
+        border-radius: 16px;
+        border: 1px solid rgba(110, 240, 216, 0.35);
+        background: linear-gradient(180deg, rgba(50, 130, 120, 0.45), rgba(12, 45, 50, 0.9));
         display: flex;
         align-items: center;
         justify-content: center;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        color: rgba(220, 255, 246, 0.9);
+        touch-action: none;
+      }
+      #touchCtrl .boost {
+        position: absolute;
+        left: max(8px, env(safe-area-inset-left));
+        bottom: calc(max(10px, env(safe-area-inset-bottom)) + clamp(110px, 28vh, 190px) + 10px);
+        width: min(130px, 30vw);
+        height: clamp(56px, 13vh, 92px);
+        pointer-events: auto;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 184, 90, 0.45);
+        background: linear-gradient(180deg, rgba(140, 90, 40, 0.5), rgba(40, 25, 10, 0.88));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
         font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.05em;
-        color: rgba(200, 255, 228, 0.85);
+        letter-spacing: 0.08em;
+        color: rgba(255, 230, 180, 0.95);
+        touch-action: none;
       }
       .hidden {
         display: none !important;
@@ -167,817 +188,657 @@
     </style>
   </head>
   <body>
-    <div id="root">
+    <div id="wrap">
       <canvas id="game"></canvas>
-      <div id="touchHud" class="hidden" aria-hidden="true">
-        <div id="touchSteerPad" title="Slide finger to steer"></div>
-        <div id="touchGas"><span>GAS</span></div>
+      <div id="hud" class="hidden"></div>
+      <div id="touchCtrl" class="hidden" aria-hidden="true">
+        <div class="pad" id="steerPad" title="Slide to steer"></div>
+        <div class="gas" id="gasBtn">GAS</div>
+        <div class="boost" id="boostBtn">NITRO</div>
       </div>
-      <div id="hud" class="hud hidden"></div>
-      <div id="menu" class="menu"></div>
+      <div id="overlay"></div>
     </div>
 
     <script>
       (function () {
         const TAU = Math.PI * 2;
+        const SEG_LEN = 200;
+        const ROAD_W = 2000;
+        const RUMBLE_W = 1200;
+        const LANES = 3;
+        const LANE_W = ROAD_W / LANES;
 
-        /** @typedef {{ ox:number, oy:number, ix:number, iy:number }} EllipseRace */
-        const TRACKS = [
-          { name: "Sunrise Oval", ellipse: { ox: 0, oy: 0, ix: 0, iy: 0 }, radOut: [520, 240], radIn: [380, 160], laps: 2 },
-          { name: "Harbor Curve", ellipse: { ox: -40, oy: 30, ix: -20, iy: -10 }, radOut: [480, 300], radIn: [340, 200], laps: 2 },
-          { name: "Cliff Chicane", ellipse: { ox: 70, oy: -50, ix: -40, iy: 20 }, radOut: [460, 220], radIn: [300, 120], laps: 3 },
-          { name: "Neon Speedway", ellipse: { ox: 0, oy: 0, ix: 0, iy: 0 }, radOut: [580, 200], radIn: [430, 120], laps: 2 },
-          { name: "Tight Spiral", ellipse: { ox: -60, oy: -40, ix: 35, iy: -15 }, radOut: [400, 400], radIn: [280, 280], laps: 2 },
-          { name: "Master GP", ellipse: { ox: 0, oy: -80, ix: -25, iy: 40 }, radOut: [640, 280], radIn: [480, 180], laps: 3 },
+        /** @type {{ name: string, tag: string, sky: [string,string], fog: string, roadLight: string, roadDark: string, rumble: string, grass: string, star: string, goal: number }}[] */
+        const REGIONS = [
+          {
+            name: "Emerald Reach",
+            tag: "Coastal highway · wind & stars",
+            sky: ["#1a5080", "#2a4088"],
+            fog: "#4a6898",
+            roadLight: "#4a5570",
+            roadDark: "#3a4460",
+            rumble: "#d04a5a",
+            grass: "#1a6848",
+            star: "#fff4a8",
+            goal: 90000,
+          },
+          {
+            name: "Crimson Drift",
+            tag: "Neon canyon · violet storm",
+            sky: ["#280828", "#180430"],
+            fog: "#5a3870",
+            roadLight: "#4a4468",
+            roadDark: "#323048",
+            rumble: "#e03070",
+            grass: "#2a0828",
+            star: "#ff90e8",
+            goal: 120000,
+          },
+          {
+            name: "Sunforge Line",
+            tag: "Desert burn · long straights",
+            sky: ["#c86020", "#904020"],
+            fog: "#c09060",
+            roadLight: "#706050",
+            roadDark: "#504840",
+            rumble: "#f0c040",
+            grass: "#6a5020",
+            star: "#ffffc0",
+            goal: 150000,
+          },
         ];
 
-        /** @type {HTMLCanvasElement} */
         const canvas = document.getElementById("game");
         const ctx = canvas.getContext("2d", { alpha: false });
-        const menuEl = document.getElementById("menu");
+        const overlay = document.getElementById("overlay");
         const hudEl = document.getElementById("hud");
-        const touchHud = document.getElementById("touchHud");
+        const touchCtrl = document.getElementById("touchCtrl");
+        const steerPad = document.getElementById("steerPad");
+        const gasBtn = document.getElementById("gasBtn");
+        const boostBtn = document.getElementById("boostBtn");
 
-        /** @typedef {{ steer: number, accel: boolean, brake: boolean }} */
-        /** @typedef {{ keys: Partial<Record<string,boolean>>, touchSteer:number }} Inputs */
-        const inputs = [];
-        /** @type {{players:number,laps:number,ai:number,trackIndex:number}} */
-        let config = { players: 1, laps: 2, ai: 3, trackIndex: 0 };
+        let W = 800;
+        let H = 600;
+        let dpr = 1;
+        let camDepth = 0.84;
+        let horizonY = 0;
 
-        function ellipsePoint(cx, cy, rx, ry, t) {
-          return [cx + Math.cos(t) * rx, cy + Math.sin(t) * ry];
-        }
-
-        function pointNearEllipse(px, py, cx, cy, rx, ry) {
-          if (rx < 1e-6 || ry < 1e-6) return { t: 0, x: cx, y: cy, nx: 0, ny: 1 };
-          const ux = px - cx;
-          const uy = py - cy;
-          const t = Math.atan2(uy / ry, ux / rx);
-          const sx = cx + Math.cos(t) * rx;
-          const sy = cy + Math.sin(t) * ry;
-          let nx = (px - sx) / (rx * 0.25 + Math.hypot(ux - Math.cos(t) * rx, uy - Math.sin(t) * ry));
-          let ny = (py - sy) / (ry * 0.25 + Math.hypot(ux - Math.cos(t) * rx, uy - Math.sin(t) * ry));
-          const nh = Math.hypot(px - sx, py - sy) + 1e-8;
-          nx = (px - sx) / nh;
-          ny = (py - sy) / nh;
-          return { t, x: sx, y: sy, nx, ny };
-        }
-
-        /** @typedef {{ ox:number[], oy:number[], ix:number[], iy:number[] }} TrackGeom */
-        function geomFromTrack(ti) {
-          const tr = TRACKS[ti];
-          return {
-            cxo: tr.ellipse.ox,
-            cyo: tr.ellipse.oy,
-            rxo: tr.radOut[0],
-            ryo: tr.radOut[1],
-            cxi: tr.ellipse.ix,
-            cyi: tr.ellipse.iy,
-            rxi: tr.radIn[0],
-            ryi: tr.radIn[1],
-            tcx: (tr.ellipse.ox + tr.ellipse.ix) * 0.5,
-            tcy: (tr.ellipse.oy + tr.ellipse.iy) * 0.5,
-          };
-        }
-
-        function inRoad(g, x, y) {
-          const xo = (x - g.cxo) / g.rxo;
-          const yo = (y - g.cyo) / g.ryo;
-          const xin = (x - g.cxi) / g.rxi;
-          const yin = (y - g.cyi) / g.ryi;
-          const out = xo * xo + yo * yo <= 1;
-          const inn = xin * xin + yin * yin >= 1;
-          return out && inn;
-        }
-
-        function snapToRoad(g, x, y) {
-          const po = pointNearEllipse(x, y, g.cxo, g.cyo, g.rxo, g.ryo);
-          const pi = pointNearEllipse(x, y, g.cxi, g.cyi, g.rxi, g.ryi);
-          const doo = Math.hypot(x - po.x, y - po.y);
-          const dii = Math.hypot(x - pi.x, y - pi.y);
-          if (doo < dii) {
-            const px = po.x + po.nx * 3;
-            const py = po.y + po.ny * 3;
-            return { x: px, y: py, nx: po.nx, ny: po.ny, ang: po.t };
-          }
-          const px = pi.x - pi.nx * 3;
-          const py = pi.y - pi.ny * 3;
-          return { x: px, y: py, nx: -pi.nx, ny: -pi.ny, ang: pi.t };
-        }
-
-        function carColor(i) {
-          const c = ["#5ee8a8", "#6db4ff", "#ffb44d", "#e77bff"];
-          return c[i % c.length];
-        }
-
-        function makeCar(i, g, startAngle) {
-          const cx = g.tcx;
-          const cy = g.tcy;
-          const midRx = ((g.rxo + g.rxi) * 0.5 * 0.96) + i * 3;
-          const midRy = ((g.ryo + g.ryi) * 0.5 * 0.96) + i * 3;
-          const px = cx + Math.cos(startAngle) * midRx;
-          const py = cy + Math.sin(startAngle) * midRy;
-          const tx = cx + Math.cos(startAngle + 0.06) * midRx - px;
-          const ty = cy + Math.sin(startAngle + 0.06) * midRy - py;
-          const ang = Math.atan2(ty, tx);
-          const prog0 = ((((Math.atan2(py - cy, px - cx) + TAU / 4) % TAU) + TAU) % TAU) / TAU;
-          return {
-            i,
-            x: px,
-            y: py,
-            ang,
-            vx: Math.cos(ang) * 120,
-            vy: Math.sin(ang) * 120,
-            smoothCamX: px,
-            smoothCamY: py,
-            steerSmoothed: 0,
-            completedLaps: 0,
-            progress: prog0,
-            finished: false,
-            finishRank: null,
-          };
-        }
-
-        /** @type {{x:number,y:number,a:number,t:number}[]} */
-        let skidMarks = [];
-
-        let cars = [];
-        let geom = null;
         /** @type {number} */
-        let startTime = 0;
-        let finishedCount = 0;
-        /** @type {number|null} */
-        let countdown = null;
-        /** Race clock after GO — lap line ignored until after this time */
-        let lapUnlockAt = 0;
-        /** @type {number} */
+        let regionIndex = 0;
+        let road = [];
+        let roadLen = 0;
+        let totalLen = 0;
+
+        let player = { x: 0, z: 0, speed: 0, maxSpeed: 24000, accel: 14000, brake: 24000, nitro: 100 };
+        let steerTarget = 0;
+        let steerSmooth = 0;
+        let keys = {};
+        let touchSteer = 0;
+        let touchGas = 0;
+        let touchBoost = 0;
+        let pointerSteer = 0;
+        let pointerGas = false;
+        let pointerBoost = false;
+        let mouseMode = false;
+
+        let stars = [];
+        let traffic = [];
+        let boostPads = new Set();
+
+        let distanceRun = 0;
+        let starsCollected = 0;
+        let running = false;
+        let gameOver = false;
+        let won = false;
         let lastT = 0;
-        let resultsActive = false;
-        /** Pointer-driving (P1): steering from X, gas with primary button on canvas */
-        const pointerDrive = { active: false, steer: 0, gas: false, useMouse: false };
+        let audioCtx = null;
+        let controlsBound = false;
 
-        /** @param {number} i player index binding */
-        function bindInput(i, keymap) {
-          inputs[i] = { keys: {}, touchSteer: 0, touchGas: 0, steerSmoothed: 0, keymap };
+        function laneToX(lane) {
+          return (lane - 1) * LANE_W;
         }
 
-        const keyMaps = [
-          { left: ["ArrowLeft", "a", "A"], right: ["ArrowRight", "d", "D"], up: ["ArrowUp", "w", "W"], down: ["ArrowDown", "s", "S"] },
-          { left: ["j", "J"], right: ["l", "L"], up: ["i", "I"], down: ["k", "K"] },
-          { left: ["v", "V"], right: ["n", "N"], up: ["f", "F"], down: ["c", "C"] },
-          { left: ["4", "Numpad4"], right: ["6", "Numpad6"], up: ["8", "Numpad8"], down: ["5", "Numpad5"] },
-        ];
-
-        function setMenu() {
-          hudEl.classList.add("hidden");
-          touchHud.classList.add("hidden");
-          menuEl.classList.remove("hidden");
-          menuEl.innerHTML = `
-            <h1>Coast Sprint</h1>
-            <p class="tag">Arcade oval racing — beat the bots, climb the levels. Works on PC &amp; iPad.</p>
-            <div class="row">
-              <button type="button" class="primary" data-mode="1">1 player</button>
-              <button type="button" data-mode="2">2 players</button>
-              <button type="button" data-mode="4">4 players</button>
-            </div>
-            <p class="hint"><strong>Keyboard:</strong> steer + ↑ gas · ↓ brake &nbsp;·&nbsp; <strong>Mouse:</strong> hold <em>left button</em> on the track, move sideways to steer &nbsp;·&nbsp; <strong>Touch:</strong> slide the bottom bar to steer, tap <strong>GAS</strong> to accelerate</p>
-          `;
-          menuEl.querySelectorAll("[data-mode]").forEach((btn) => {
-            btn.addEventListener("click", () => {
-              config.players = +btn.getAttribute("data-mode");
-              showLevelSelect();
+        function buildRoad() {
+          road = [];
+          const N = 2200;
+          let y = 0;
+          let cumX = 0;
+          for (let i = 0; i < N; i++) {
+            const t = i / N;
+            let curve = Math.sin(t * TAU * 6) * 1.2 + Math.sin(t * TAU * 14) * 0.45;
+            if (i > 80 && i < 180) curve += 2.4;
+            if (i > 400 && i < 520) curve -= 2.1;
+            if (i > 900 && i < 1100) curve += 1.8;
+            y += Math.sin(t * TAU * 18) * 35;
+            cumX += curve * 4;
+            const col = i % 2;
+            road.push({
+              i,
+              curve,
+              y,
+              wX: cumX,
+              col,
             });
-          });
-        }
-
-        function showLevelSelect() {
-          menuEl.innerHTML = `
-            <h1>Pick a track</h1>
-            <p class="tag">${config.players} human driver(s) · choose difficulty by track</p>
-            <div class="levels">
-              ${TRACKS.map(
-                (t, i) =>
-                  `<button type="button" data-level="${i}"><strong>${t.name}</strong><br /><span style="opacity:.7">${t.laps} laps</span></button>`
-              ).join("")}
-            </div>
-            <div class="row">
-              <button type="button" id="back">Back</button>
-            </div>
-          `;
-          menuEl.querySelectorAll("[data-level]").forEach((btn) => {
-            btn.addEventListener("click", () => {
-              config.trackIndex = +btn.getAttribute("data-level");
-              config.laps = TRACKS[config.trackIndex].laps;
-              startRace();
-            });
-          });
-          menuEl.querySelector("#back").addEventListener("click", setMenu);
+          }
+          roadLen = road.length;
+          totalLen = roadLen * SEG_LEN;
+          stars = [];
+          traffic = [];
+          boostPads.clear();
+          for (let i = 50; i < roadLen - 50; i += 9) {
+            if (Math.random() < 0.35) stars.push({ seg: i, lane: (Math.random() * 3) | 0, got: false });
+          }
+          for (let i = 120; i < roadLen - 120; i += 17) {
+            if (Math.random() < 0.4) traffic.push({ seg: i, lane: (Math.random() * 3) | 0, zOff: Math.random() * SEG_LEN });
+          }
+          for (let i = 40; i < roadLen; i += 28) boostPads.add(i);
         }
 
         function resize() {
-          const dpr = Math.min(2, window.devicePixelRatio || 1);
-          const w = window.innerWidth;
-          const h = window.innerHeight;
-          canvas.width = Math.floor(w * dpr);
-          canvas.height = Math.floor(h * dpr);
-          canvas.style.width = w + "px";
-          canvas.style.height = h + "px";
+          dpr = Math.min(2, window.devicePixelRatio || 1);
+          W = window.innerWidth;
+          H = window.innerHeight;
+          canvas.width = (W * dpr) | 0;
+          canvas.height = (H * dpr) | 0;
+          canvas.style.width = W + "px";
+          canvas.style.height = H + "px";
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          horizonY = H * (0.32 + Math.min(180, H) / H * 0.08);
         }
         window.addEventListener("resize", resize);
         resize();
 
-        function viewportRectForPlayer(pidx) {
-          const W = window.innerWidth;
-          const H = window.innerHeight;
-          const n = config.players;
-          if (n <= 1) return { left: 0, top: 0, width: W, height: H };
-          if (n === 2) return pidx === 0 ? { left: 0, top: 0, width: W, height: H * 0.5 } : { left: 0, top: H * 0.5, width: W, height: H * 0.5 };
-          const col = pidx % 2;
-          const row = pidx >> 1;
-          return { left: col * W * 0.5, top: row * H * 0.5, width: W * 0.5, height: H * 0.5 };
+        function project(camWX, camWY, camZ, worldX, worldY, worldZ, width, height) {
+          const dz = worldZ - camZ;
+          if (dz < 8) return null;
+          const sc = camDepth / dz;
+          const sx = width / 2 + (worldX - camWX) * sc * width * 0.42;
+          const sy = height / 2 - (worldY - camWY) * sc * height * 0.48;
+          const sw = ROAD_W * sc * width * 0.00022;
+          return { sx, sy, sw, sc };
         }
 
-        let controlsBound = false;
-        /** @type {number} */
-        let raceTime = 0;
-
-        function bindControlsOnce() {
-          if (controlsBound) return;
-          controlsBound = true;
-          const steerPad = document.getElementById("touchSteerPad");
-          const gasBtn = document.getElementById("touchGas");
-
-          function steerNorm(clientX, el) {
-            const r = el.getBoundingClientRect();
-            const t = ((clientX - r.left) / r.width) * 2 - 1;
-            return Math.max(-1, Math.min(1, Math.pow(Math.abs(t), 0.85) * Math.sign(t)));
-          }
-          function onSteer(ev) {
-            ev.preventDefault();
-            const cx = (ev.touches && ev.touches[0] ? ev.touches[0].clientX : ev.clientX) ?? 0;
-            if (!inputs[0]) return;
-            inputs[0].touchSteer = steerNorm(cx, steerPad);
-          }
-          steerPad.addEventListener("touchstart", onSteer, { passive: false });
-          steerPad.addEventListener("touchmove", onSteer, { passive: false });
-          steerPad.addEventListener(
-            "touchend",
-            (e) => {
-              e.preventDefault();
-              if (inputs[0]) inputs[0].touchSteer = 0;
-            },
-            { passive: false }
-          );
-
-          gasBtn.addEventListener(
-            "touchstart",
-            (e) => {
-              e.preventDefault();
-              if (inputs[0]) inputs[0].touchGas = 1;
-            },
-            { passive: false }
-          );
-          gasBtn.addEventListener(
-            "touchend",
-            (e) => {
-              e.preventDefault();
-              if (inputs[0]) inputs[0].touchGas = 0;
-            },
-            { passive: false }
-          );
-          gasBtn.addEventListener(
-            "touchcancel",
-            (e) => {
-              e.preventDefault();
-              if (inputs[0]) inputs[0].touchGas = 0;
-            },
-            { passive: false }
-          );
-          gasBtn.addEventListener(
-            "mousedown",
-            () => inputs[0] && (inputs[0].touchGas = 1),
-            false
-          );
-          gasBtn.addEventListener(
-            "mouseup",
-            () => inputs[0] && (inputs[0].touchGas = 0),
-            false
-          );
-          gasBtn.addEventListener(
-            "mouseleave",
-            () => inputs[0] && (inputs[0].touchGas = 0),
-            false
-          );
-
-          function steerFromViewport(ev) {
-            const r = viewportRectForPlayer(0);
-            const lx = ev.clientX - r.left;
-            const nx = Math.max(-1, Math.min(1, (lx / r.width) * 2 - 1));
-            pointerDrive.steer = nx * 1.28;
-            pointerDrive.gas = (ev.buttons & 1) !== 0;
-          }
-
-          canvas.addEventListener(
-            "pointerdown",
-            (e) => {
-              if (!geom || !menuEl.classList.contains("hidden")) return;
-              if (resultsActive) return;
-              if (e.pointerType !== "mouse") return;
-              pointerDrive.useMouse = true;
-              try {
-                canvas.setPointerCapture(e.pointerId);
-              } catch (_) {}
-              pointerDrive.gas = true;
-              steerFromViewport(e);
-            },
-            false
-          );
-          canvas.addEventListener(
-            "pointermove",
-            (e) => {
-              if (!pointerDrive.useMouse || e.pointerType !== "mouse") return;
-              if (!geom || countdown !== null) return;
-              steerFromViewport(e);
-            },
-            false
-          );
-          function endMouse() {
-            pointerDrive.active = false;
-            pointerDrive.gas = false;
-            pointerDrive.steer = 0;
-            pointerDrive.useMouse = false;
-          }
-          canvas.addEventListener("pointerup", endMouse, false);
-          canvas.addEventListener("pointercancel", endMouse, false);
+        function playTone(freq, dur) {
+          try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.frequency.value = freq;
+            g.gain.value = 0.04;
+            o.start();
+            o.stop(audioCtx.currentTime + dur);
+          } catch (_) {}
         }
 
-        function startRace() {
-          menuEl.classList.add("hidden");
-          hudEl.classList.remove("hidden");
-          touchHud.classList.remove("hidden");
-          geom = geomFromTrack(config.trackIndex);
-          const totalSlots = Math.max(4, config.players + 3);
-          const humans = config.players;
-          const aiCount = Math.max(0, 4 - humans);
-          config.ai = aiCount;
-          cars = [];
-          const spread = (TAU / 8) * 0.35;
-          for (let p = 0; p < 4; p++) {
-            const st = -TAU / 4 - p * spread;
-            cars.push(makeCar(p, geom, st));
+        function drawBackground(R) {
+          const g = ctx.createLinearGradient(0, 0, 0, H);
+          g.addColorStop(0, R.sky[0]);
+          g.addColorStop(0.55, R.sky[1]);
+          g.addColorStop(1, R.fog);
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = "rgba(255,255,255,0.04)";
+          for (let i = 0; i < 28; i++) {
+            const x = ((i * 137 + performance.now() * 0.01) % (W + 120)) - 60;
+            const y = (i / 28) * horizonY * 0.92;
+            ctx.fillRect(x, y, 2 + (i % 3), 2);
           }
-          for (let p = 0; p < 4; p++) bindInput(p, keyMaps[p]);
-          finishedCount = 0;
-          startTime = performance.now();
-          countdown = 3;
-          lastT = startTime;
-          lapUnlockAt = 0;
-          raceTime = 0;
-          skidMarks = [];
-          Object.assign(pointerDrive, { active: false, steer: 0, gas: false, useMouse: false });
-          bindControlsOnce();
         }
 
-        function keyActive(inp, kind) {
-          const km = inp.keymap;
-          const arr = km[kind];
-          for (const k of arr) if (inp.keys[k]) return true;
-          return false;
-        }
-
-        function tickAi(car, dt) {
-          const g = geom;
-          const midRx = ((g.rxo + g.rxi) * 0.5) * 0.94;
-          const midRy = ((g.ryo + g.ryi) * 0.5) * 0.94;
-          const targetT = car.progress * TAU + TAU * 0.05 + car.i * 0.02;
-          const tx = g.tcx + Math.cos(targetT) * midRx;
-          const ty = g.tcy + Math.sin(targetT) * midRy;
-          const dx = tx - car.x;
-          const dy = ty - car.y;
-          const targetAng = Math.atan2(dy, dx);
-          let diff = targetAng - car.ang;
-          while (diff > Math.PI) diff -= TAU;
-          while (diff < -Math.PI) diff += TAU;
-          const steer = Math.max(-1, Math.min(1, diff * 1.85));
-          const throttle = 0.85 + Math.sin(performance.now() * 0.003 + car.i) * 0.08;
-          applyCarPhysics(car, dt, steer, throttle, 0);
-        }
-
-        function applyCarPhysics(car, dt, steer, throttle, brake) {
-          const g = geom;
-          const maxSpd = 590;
-          const accelF = 410;
-          const lateralGrip = 22;
-          const rollDrag = 3.8;
-          const yawBase = 3.05;
-
-          let fx = Math.cos(car.ang);
-          let fy = Math.sin(car.ang);
-          let rx = -fy;
-          let ry = fx;
-
-          let spd = Math.hypot(car.vx, car.vy);
-          let fwd = car.vx * fx + car.vy * fy;
-          let lat = car.vx * rx + car.vy * ry;
-
-          const steerRamp = 0.38 + Math.min(Math.abs(fwd) / 300, 0.92);
-          const rev = fwd < -35;
-          car.ang += steer * yawBase * steerRamp * (rev ? -0.92 : 1) * dt;
-
-          fx = Math.cos(car.ang);
-          fy = Math.sin(car.ang);
-          rx = -fy;
-          ry = fx;
-
-          fwd = car.vx * fx + car.vy * fy;
-          lat = car.vx * rx + car.vy * ry;
-
-          if (throttle > 0) fwd += accelF * throttle * dt;
-          if (throttle <= 0) fwd *= Math.max(0, 1 - rollDrag * dt * 0.22);
-
-          if (brake > 0) {
-            const b = brake;
-            fwd *= Math.max(0, 1 - b * 3.2 * dt);
-            lat *= Math.max(0, 1 - b * lateralGrip * 0.045 * dt);
+        function drawRoadView(R) {
+          const groundG = ctx.createLinearGradient(0, horizonY, 0, H);
+          groundG.addColorStop(0, R.grass);
+          groundG.addColorStop(1, "#05080c");
+          ctx.fillStyle = groundG;
+          ctx.fillRect(0, horizonY, W, H - horizonY);
+          ctx.fillStyle = "rgba(255,255,255,0.035)";
+          for (let yy = horizonY + 40; yy < H; yy += 14) {
+            const wob = Math.sin(yy * 0.018 + player.z * 0.003) * 40;
+            ctx.fillRect(wob + 30, yy, W - 60, 1);
           }
 
-          lat *= Math.exp(-lateralGrip * dt);
-          fwd *= Math.exp(-rollDrag * dt * 0.05);
+          const baseIdxWrapped = (((player.z / SEG_LEN) | 0) % roadLen + roadLen) % roadLen;
+          const camZ = player.z;
+          const camWX = road[baseIdxWrapped].wX + player.x * 420;
+          const camWY = road[baseIdxWrapped].y + 1100;
 
-          car.vx = fwd * fx + lat * rx;
-          car.vy = fwd * fy + lat * ry;
+          const drawDist = 160;
+          let maxY = H + 400;
 
-          spd = Math.hypot(car.vx, car.vy);
-          if (spd > maxSpd) {
-            const r = maxSpd / spd;
-            car.vx *= r;
-            car.vy *= r;
-            spd = maxSpd;
-          }
+          for (let n = drawDist; n >= 2; n--) {
+            const segIdx = (baseIdxWrapped + n) % roadLen;
+            const nextIdx = (segIdx + 1) % roadLen;
 
-          if (!car.finished && Math.abs(lat) > 110 && spd > 180 && Math.random() < 0.28) {
-            skidMarks.push({ x: car.x - fx * 16, y: car.y - fy * 16, a: car.ang, life: 1 });
-            if (skidMarks.length > 520) skidMarks.splice(0, skidMarks.length - 520);
-          }
+            const wz0 = camZ + n * SEG_LEN;
+            const wz1 = camZ + (n + 1) * SEG_LEN;
+            const s0 = road[segIdx];
+            const s1 = road[nextIdx];
 
-          let nx = car.x + car.vx * dt;
-          let ny = car.y + car.vy * dt;
-          if (!inRoad(g, nx, ny)) {
-            const snp = snapToRoad(g, nx, ny);
-            const sp2 = Math.hypot(car.vx, car.vy);
-            const dot = car.vx * snp.nx + car.vy * snp.ny;
-            car.vx -= 2 * dot * snp.nx;
-            car.vy -= 2 * dot * snp.ny;
-            car.vx *= 0.74;
-            car.vy *= 0.74;
-            car.x = snp.x;
-            car.y = snp.y;
-            if (sp2 > 50) {
-              car.vx += snp.nx * 26;
-              car.vy += snp.ny * 26;
-            }
-          } else {
-            car.x = nx;
-            car.y = ny;
-          }
-          const pang = Math.atan2(car.y - g.tcy, car.x - g.tcx);
-          let prog = (pang + TAU / 4) / TAU;
-          if (prog < 0) prog += 1;
-          if (prog >= 1) prog -= 1;
-          const prev = car.progress;
-          const crossed = prev > 0.82 && prog < 0.2;
-          const now = performance.now();
-          if (crossed && now >= lapUnlockAt) {
-            const human = car.i < config.players;
-            if (human && !car.finished) {
-              car.completedLaps++;
-              if (car.completedLaps >= config.laps) {
-                car.finished = true;
-                finishedCount++;
-                car.finishRank = finishedCount;
-              }
-            }
-          }
-          car.progress = prog;
-        }
+            const p0 = project(camWX, camWY, camZ, s0.wX, s0.y, wz0, W, H);
+            const p1 = project(camWX, camWY, camZ, s1.wX, s1.y, wz1, W, H);
+            if (!p0 || !p1) continue;
 
-        function drawWorld(vx, vy, vw, vh, follow) {
-          const g = geom;
-          const pad = 80;
-          const scale = Math.min(vw, vh) / (Math.max(g.rxo, g.ryo) * 2 + pad);
-          const camX = follow.smoothCamX;
-          const camY = follow.smoothCamY;
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(vx, vy, vw, vh);
-          ctx.clip();
-          ctx.translate(vx + vw / 2, vy + vh / 2);
-          ctx.scale(scale, scale);
-          ctx.translate(-camX, -camY);
+            const x0 = p0.sx,
+              y0 = p0.sy,
+              w0 = Math.max(p0.sw, 1.8);
+            const x1 = p1.sx,
+              y1 = p1.sy,
+              w1 = Math.max(p1.sw, 1.8);
+            const yTop = Math.min(y0, y1);
+            if (yTop > maxY) continue;
+            maxY = yTop;
 
-          const gx = ctx.createRadialGradient(g.tcx - 140, g.tcy - 90, 50, g.tcx, g.tcy, Math.max(g.rxo, g.ryo) * 2.8);
-          gx.addColorStop(0, "#1f2f48");
-          gx.addColorStop(0.48, "#0f1624");
-          gx.addColorStop(1, "#06090e");
-          ctx.fillStyle = gx;
-          ctx.fillRect(-2600, -2600, 5200, 5200);
-
-          const pavement = ctx.createRadialGradient(g.tcx, g.tcy, 40, g.tcx, g.tcy, (g.rxo + g.rxi) * 0.72);
-          pavement.addColorStop(0, "#2a3545");
-          pavement.addColorStop(0.72, "#1a222e");
-          pavement.addColorStop(1, "#121820");
-          ctx.fillStyle = pavement;
-          ctx.globalAlpha = 0.55;
-          ctx.beginPath();
-          ellipsePath(ctx, (g.cxo + g.cxi) * 0.5, (g.cyo + g.cyi) * 0.5, ((g.rxo + g.rxi) / 2) * 1.12, ((g.ryo + g.ryi) / 2) * 1.12);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-
-          ctx.strokeStyle = "rgba(255,60,70,.28)";
-          ctx.lineWidth = 18 / scale;
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ellipsePath(ctx, g.cxo, g.cyo, g.rxo + 48, g.ryo + 48);
-          ctx.stroke();
-          ctx.beginPath();
-          ellipsePath(ctx, g.cxi, g.cyi, g.rxi - 42, g.ryi - 42);
-          ctx.stroke();
-
-          ctx.strokeStyle = "rgba(230,238,246,.06)";
-          ctx.lineWidth = 3 / scale;
-          ctx.beginPath();
-          for (let t = 0; t <= 96; t++) {
-            const a = (t / 96) * TAU;
-            const midRx = (g.rxo + g.rxi) * 0.5;
-            const midRy = (g.ryo + g.ryi) * 0.5;
-            const mx = g.cxo + Math.cos(a) * midRx * 1.04;
-            const my = g.cyo + Math.sin(a) * midRy * 1.04;
-            if (t === 0) ctx.moveTo(mx, my);
-            else ctx.lineTo(mx, my);
-          }
-          ctx.stroke();
-
-          ctx.strokeStyle = "rgba(245,247,252,.14)";
-          ctx.lineWidth = 8 / scale;
-          ctx.beginPath();
-          ellipsePath(ctx, g.cxo, g.cyo, g.rxo + 32, g.ryo + 32);
-          ctx.stroke();
-          ctx.beginPath();
-          ellipsePath(ctx, g.cxi, g.cyi, g.rxi - 32, g.ryi - 32);
-          ctx.stroke();
-
-          ctx.strokeStyle = "rgba(255,230,120,.52)";
-          ctx.lineWidth = 2.5 / scale;
-          ctx.setLineDash([(20 / scale) | 0, (16 / scale) | 0]);
-          ctx.lineDashOffset = -(raceTime * 0.42) % 80;
-          ctx.beginPath();
-          ellipsePath(ctx, (g.cxo + g.cxi) * 0.5, (g.cyo + g.cyi) * 0.5, ((g.rxo + g.rxi) / 2) * 0.99, ((g.ryo + g.ryi) / 2) * 0.99);
-          ctx.stroke();
-          ctx.lineDashOffset = 0;
-
-          ctx.setLineDash([]);
-          ctx.lineWidth = 2 / scale;
-          ctx.fillStyle = "rgba(255,255,255,.55)";
-          ctx.beginPath();
-          ctx.arc(
-            g.tcx + Math.cos(-TAU / 4) * ((g.rxo + g.rxi) / 2) * 0.92,
-            g.tcy + Math.sin(-TAU / 4) * ((g.ryo + g.ryi) / 2) * 0.92,
-            11 / scale,
-            0,
-            TAU
-          );
-          ctx.fill();
-
-          for (const sm of skidMarks) {
-            const al = Math.max(0.12, sm.life * 0.35);
-            ctx.save();
-            ctx.translate(sm.x, sm.y);
-            ctx.rotate(sm.a);
-            ctx.fillStyle = `rgba(12,14,18,${al})`;
+            const col = s0.col === 0 ? R.roadLight : R.roadDark;
+            ctx.fillStyle = col;
             ctx.beginPath();
-            ctx.ellipse(0, 0, 7, 3, 0, 0, TAU);
-            ctx.fill();
-            ctx.restore();
-          }
-
-          for (const car of cars) {
-            ctx.save();
-            ctx.translate(car.x, car.y);
-            ctx.rotate(car.ang);
-            const w = 20;
-            const h = 10;
-            ctx.fillStyle = "rgba(0,0,0,.45)";
-            ctx.beginPath();
-            ctx.ellipse(0, 3.5, w * 0.55, h * 0.9, 0, 0, TAU);
+            ctx.moveTo(x0 - w0, y0);
+            ctx.lineTo(x0 + w0, y0);
+            ctx.lineTo(x1 + w1, y1);
+            ctx.lineTo(x1 - w1, y1);
+            ctx.closePath();
             ctx.fill();
 
-            ctx.fillStyle = carColor(car.i);
-            ctx.shadowColor = carColor(car.i);
-            ctx.shadowBlur = 14;
+            ctx.fillStyle = R.rumble;
+            const rb = Math.max(w0 * 0.1, 2);
             ctx.beginPath();
-            drawCarBody(ctx, -w / 2, -h / 2, w, h, 4);
+            ctx.moveTo(x0 - w0 - rb, y0);
+            ctx.lineTo(x0 - w0, y0);
+            ctx.lineTo(x1 - w1, y1);
+            ctx.lineTo(x1 - w1 - rb, y1);
+            ctx.closePath();
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x0 + w0, y0);
+            ctx.lineTo(x0 + w0 + rb, y0);
+            ctx.lineTo(x1 + w1 + rb, y1);
+            ctx.lineTo(x1 + w1, y1);
+            ctx.closePath();
+            ctx.fill();
+
+            if (boostPads.has(segIdx)) {
+              ctx.fillStyle = "rgba(110,240,200,0.35)";
+              ctx.fillRect(x1 - w1 * 0.5, y1 - 4, w1, 4);
+            }
+          }
+        }
+
+        function drawStarsSprite(R) {
+          const baseIdxWrapped = (((player.z / SEG_LEN) | 0) % roadLen + roadLen) % roadLen;
+          const camZ = player.z;
+          const camWX = road[baseIdxWrapped].wX + player.x * 420;
+          const camWY = road[baseIdxWrapped].y + 1100;
+          for (const st of stars) {
+            if (st.got) continue;
+            const segIdx = st.seg % roadLen;
+            const z = st.seg * SEG_LEN + SEG_LEN * 0.5;
+            const ahead = z - camZ;
+            if (ahead < 20 || ahead > SEG_LEN * 110) continue;
+            const wx = road[segIdx].wX + laneToX(st.lane);
+            const wy = road[segIdx].y;
+            const p = project(camWX, camWY, camZ, wx, wy + 520, z, W, H);
+            if (!p || p.sy < horizonY - 20 || p.sy > H + 50) continue;
+            const sz = Math.max(12, 520 * p.sc);
+            ctx.fillStyle = R.star;
+            ctx.shadowColor = R.star;
+            ctx.shadowBlur = 16;
+            ctx.beginPath();
+            ctx.arc(p.sx, p.sy, sz, 0, TAU);
             ctx.fill();
             ctx.shadowBlur = 0;
-            ctx.fillStyle = "rgba(8,10,14,.72)";
-            ctx.fillRect(-w / 2 + 2.5, -h / 2 + 2, w - 5, h - 4);
-
-            const hl = ctx.createLinearGradient(w * 0.2, -h * 0.3, w * 0.95, -h * 0.05);
-            hl.addColorStop(0, "rgba(255,255,255,0)");
-            hl.addColorStop(0.55, "rgba(200,230,255,.55)");
-            hl.addColorStop(1, "rgba(180,220,255,.18)");
-            ctx.fillStyle = hl;
-            ctx.fillRect(w * 0.15, -h * 0.35, w * 0.75, h * 0.32);
-            ctx.restore();
           }
+        }
 
-          ctx.restore();
+        function drawTraffic(R) {
+          const baseIdxWrapped = (((player.z / SEG_LEN) | 0) % roadLen + roadLen) % roadLen;
+          const camZ = player.z;
+          const camWX = road[baseIdxWrapped].wX + player.x * 420;
+          const camWY = road[baseIdxWrapped].y + 1100;
+          for (const tr of traffic) {
+            const zi = tr.seg * SEG_LEN + tr.zOff;
+            const ahead = zi - camZ;
+            if (ahead < -SEG_LEN * 3 || ahead > SEG_LEN * 100) continue;
+            const si = tr.seg % roadLen;
+            const wx = road[si].wX + laneToX(tr.lane);
+            const wy = road[si].y;
+            const p = project(camWX, camWY, camZ, wx, wy + 480, zi, W, H);
+            if (!p || p.sy < horizonY) continue;
+            const bw = Math.max(10, p.sw * 0.32);
+            const bh = bw * 0.62;
+            ctx.fillStyle = "#1a2434";
+            ctx.fillRect(p.sx - bw / 2, p.sy - bh, bw, bh);
+            ctx.fillStyle = "#ff5050";
+            ctx.fillRect(p.sx - bw * 0.35, p.sy - bh * 0.95, bw * 0.7, bh * 0.2);
+          }
+        }
+
+        function drawPlayerCar(R, speedRatio) {
+          const cx = W * 0.5 + steerSmooth * W * 0.04;
+          const cy = H * 0.86;
+          const bw = W * 0.16;
+          const bh = W * 0.06;
           ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(steerSmooth * 0.15);
+          ctx.fillStyle = "rgba(0,0,0,0.45)";
           ctx.beginPath();
-          ctx.rect(vx, vy, vw, vh);
-          ctx.clip();
-          const vign = ctx.createRadialGradient(vx + vw * 0.5, vy + vh * 0.52, vw * 0.12, vx + vw * 0.5, vy + vh * 0.5, vw * 0.85);
-          vign.addColorStop(0, "rgba(0,0,0,0)");
-          vign.addColorStop(1, "rgba(0,0,0,.22)");
-          ctx.fillStyle = vign;
-          ctx.fillRect(vx, vy, vw, vh);
+          ctx.ellipse(0, bh * 0.5, bw * 0.45, bh * 0.35, 0, 0, TAU);
+          ctx.fill();
+
+          const body = ctx.createLinearGradient(-bw / 2, -bh, bw / 2, bh);
+          body.addColorStop(0, "#304860");
+          body.addColorStop(0.45, "#5a8098");
+          body.addColorStop(1, "#203040");
+          ctx.fillStyle = body;
+          ctx.beginPath();
+          if (typeof ctx.roundRect === "function") ctx.roundRect(-bw / 2, -bh, bw, bh, 10);
+          else ctx.rect(-bw / 2, -bh, bw, bh);
+          ctx.fill();
+
+          ctx.fillStyle = "rgba(220,248,255,0.7)";
+          ctx.fillRect(bw * 0.06, -bh * 0.85, bw * 0.35, bh * 0.35);
+
+          if (speedRatio > 0.55 && player.nitro < 92) {
+            const j = (performance.now() / 40) % 6;
+            ctx.fillStyle = "rgba(120,230,255,0.35)";
+            ctx.beginPath();
+            ctx.moveTo(-bw * 0.45, bh * 0.1);
+            ctx.lineTo(-bw * (0.78 + (j % 3) * 0.04), bh * 0.22);
+            ctx.lineTo(-bw * 0.45, bh * 0.42);
+            ctx.fill();
+          }
           ctx.restore();
         }
 
-        function drawCarBody(c, x, y, w, h, r) {
-          if (typeof c.roundRect === "function") c.roundRect(x, y, w, h, r);
-          else c.rect(x, y, w, h);
+        function drawHUD(region) {
+          const kmh = Math.min(420, Math.round(player.speed / 72));
+          const pct = Math.min(1, player.z / region.goal);
+          const nt = Math.round(player.nitro);
+          let line = `${region.name}  ·  ${kmh} km/h  ·  Stars ${starsCollected}`;
+          line += `\nRun ${((player.z / 1000) | 0)}/${(region.goal / 1000) | 0} km  ·  NITRO ${nt}%`;
+          hudEl.innerHTML =
+            `<div>${line}</div>` +
+            `<div style="margin-top:4px;width:${Math.min(220, W * 0.45)}px;height:8px;border-radius:4px;background:rgba(0,0,0,.36);overflow:hidden;display:inline-block;vertical-align:middle;">
+              <div style="height:100%;width:${pct * 100}%;background:linear-gradient(90deg,#4af0d8,#ffb44d);"></div>
+            </div>`;
         }
 
-        function ellipsePath(c, cx, cy, rx, ry) {
-          for (let t = 0; t <= 64; t++) {
-            const a = (t / 64) * TAU;
-            const x = cx + Math.cos(a) * rx;
-            const y = cy + Math.sin(a) * ry;
-            if (t === 0) c.moveTo(x, y);
-            else c.lineTo(x, y);
+        function collectAndCollide(region) {
+          const baseSeg = ((player.z / SEG_LEN) | 0) % roadLen;
+          const carZ = player.z;
+
+          for (const st of stars) {
+            if (st.got) continue;
+            const z = st.seg * SEG_LEN + SEG_LEN * 0.55;
+            const dz = Math.abs(z - carZ);
+            const want = (st.lane - 1) * 0.92;
+            if (dz < SEG_LEN * 0.55 && Math.abs(player.x - want) < 0.48) {
+              st.got = true;
+              starsCollected++;
+              playTone(660 + starsCollected * 40, 0.06);
+              player.nitro = Math.min(100, player.nitro + 12);
+              player.speed = Math.min(player.maxSpeed * 1.03, player.speed + 2800);
+            }
           }
-          c.closePath();
+
+          for (const tr of traffic) {
+            const zi = tr.seg * SEG_LEN + tr.zOff;
+            const dz = Math.abs(zi - carZ);
+            const want = (tr.lane - 1) * 0.92;
+            if (dz < 800 && Math.abs(player.x - want) < 0.45) {
+              player.speed *= 0.52;
+              playTone(120, 0.12);
+              player.x *= 0.6;
+            }
+          }
+
+          if (boostPads.has(baseSeg % roadLen)) {
+            player.speed = Math.min(player.maxSpeed * 1.06, player.speed + player.accel * 0.038);
+          }
         }
 
-        window.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" && resultsActive) {
-            setMenu();
-            resultsActive = false;
-            geom = null;
-            cars = [];
+        function step(dt) {
+          const R = REGIONS[regionIndex];
+          if (!running || gameOver) return;
+
+          let steerIn = 0;
+          if (keys["ArrowLeft"] || keys["a"] || keys["A"]) steerIn -= 1;
+          if (keys["ArrowRight"] || keys["d"] || keys["D"]) steerIn += 1;
+          if (!steerIn) {
+            if (mouseMode && pointerGas) steerIn = pointerSteer;
+            else steerIn = touchSteer;
+          }
+
+          steerSmooth += (steerIn - steerSmooth) * Math.min(1, 14 * dt);
+          steerTarget = steerSmooth;
+
+          let gas =
+            Boolean(keys["ArrowUp"] || keys["w"] || keys["W"]) || touchGas > 0.5 || (mouseMode && pointerGas);
+          let braking = Boolean(keys["ArrowDown"] || keys["s"] || keys["S"]);
+          let nitroBoost = Boolean(
+            keys["Space"] ||
+              keys["ShiftLeft"] ||
+              keys["ShiftRight"] ||
+              touchBoost > 0.5 ||
+              (mouseMode && pointerBoost)
+          );
+
+          if (!gas) {
+            player.speed *= Math.pow(0.9975, dt * 60);
+          } else {
+            let mult = nitroBoost && player.nitro > 0.5 ? 2.05 : 1;
+            player.speed += player.accel * dt * mult;
+          }
+          if (nitroBoost && player.nitro > 0) {
+            player.nitro -= 32 * dt;
+            player.speed = Math.min(player.maxSpeed * 1.25, player.speed);
+          } else if (!nitroBoost) {
+            player.nitro = Math.min(100, player.nitro + 6 * dt);
+          }
+          if (braking) player.speed -= player.brake * dt;
+          player.speed = Math.max(0, Math.min(player.maxSpeed, player.speed));
+
+          player.z += player.speed * dt;
+          distanceRun += player.speed * dt;
+          player.x += steerTarget * ((player.speed + 2400) * 0.000018) * 60 * dt;
+
+          const laneLimit = 1.02;
+          if (Math.abs(player.x) > laneLimit) {
+            player.speed *= 0.985;
+          }
+          player.x *= 0.9995;
+
+          if (player.z >= R.goal) {
+            running = false;
+            won = true;
+            gameOver = true;
+            showEnd(true);
             return;
           }
-          for (let p = 0; p < inputs.length; p++) {
-            if (!inputs[p]) continue;
-            inputs[p].keys[e.key] = true;
+          collectAndCollide(R);
+        }
+
+        function render() {
+          if (!running) return;
+          const R = REGIONS[regionIndex];
+          ctx.save();
+          drawBackground(R);
+          ctx.restore();
+
+          drawRoadView(R);
+          drawStarsSprite(R);
+          drawTraffic(R);
+
+          const spRatio = player.speed / player.maxSpeed;
+          drawPlayerCar(R, spRatio);
+
+          const vg = ctx.createRadialGradient(W * 0.5, H * 0.5, W * 0.12, W * 0.5, H * 0.52, W * 0.72);
+          vg.addColorStop(0, "transparent");
+          vg.addColorStop(1, "rgba(0,0,0,0.38)");
+          ctx.fillStyle = vg;
+          ctx.fillRect(0, 0, W, H);
+
+          drawHUD(R);
+        }
+
+        function frame(t) {
+          const dt = Math.min(0.033, (t - lastT) / 1000) || 0.016;
+          lastT = t;
+          if (running) {
+            step(dt);
+            render();
           }
-        });
-        window.addEventListener("keyup", (e) => {
-          for (let p = 0; p < inputs.length; p++) {
-            if (!inputs[p]) continue;
-            inputs[p].keys[e.key] = false;
-          }
-        });
-
-        function frame(now) {
-          const dt = Math.min(0.033, (now - lastT) / 1000);
-          lastT = now;
-
-          if (geom && cars.length) {
-            for (const c of cars) {
-              const k = c.finished ? 0.08 : 0.12;
-              c.smoothCamX += (c.x - c.smoothCamX) * k;
-              c.smoothCamY += (c.y - c.smoothCamY) * k;
-            }
-          }
-
-          if (countdown !== null) {
-            const elapsed = (now - startTime) / 1000;
-            countdown = 3 - Math.floor(elapsed);
-            if (countdown < 0) {
-              countdown = null;
-              lapUnlockAt = performance.now() + 1800;
-            }
-          }
-
-          const g = geom;
-          if (g && cars.length && countdown === null) {
-            raceTime += dt;
-            for (let i = skidMarks.length - 1; i >= 0; i--) {
-              skidMarks[i].life -= 0.0028;
-              if (skidMarks[i].life <= 0) skidMarks.splice(i, 1);
-            }
-            for (let p = 0; p < config.players; p++) {
-              if (cars[p].finished) continue;
-              const inp = inputs[p];
-              let target = 0;
-              if (keyActive(inp, "left")) target -= 1;
-              if (keyActive(inp, "right")) target += 1;
-              if (target === 0 && p === 0) {
-                if (pointerDrive.useMouse) target = pointerDrive.steer;
-                else if (inp.touchSteer) target = inp.touchSteer;
-              }
-              const rate = 12;
-              inp.steerSmoothed += (target - inp.steerSmoothed) * Math.min(1, rate * dt);
-
-              let th = 0;
-              if (keyActive(inp, "up")) th = 1;
-              else if (p === 0 && inp.touchGas > 0) th = 0.96;
-              else if (p === 0 && pointerDrive.useMouse && pointerDrive.gas) th = 1;
-              const br = keyActive(inp, "down") ? 1 : 0;
-              applyCarPhysics(cars[p], dt, inp.steerSmoothed, th, br);
-            }
-            for (let b = config.players; b < 4; b++) {
-              if (!cars[b].finished) tickAi(cars[b], dt);
-            }
-          }
-
-          const w = window.innerWidth;
-          const h = window.innerHeight;
-          ctx.fillStyle = "#06080c";
-          ctx.fillRect(0, 0, w, h);
-
-          if (geom && cars.length) {
-            const n = config.players;
-            if (n === 1) {
-              drawWorld(0, 0, w, h, cars[0]);
-            } else if (n === 2) {
-              drawWorld(0, 0, w, h * 0.5, cars[0]);
-              drawWorld(0, h * 0.5, w, h * 0.5, cars[1]);
-            } else {
-              const hw = w * 0.5;
-              const hh = h * 0.5;
-              drawWorld(0, 0, hw, hh, cars[0]);
-              drawWorld(hw, 0, hw, hh, cars[1]);
-              drawWorld(0, hh, hw, hh, cars[2]);
-              drawWorld(hw, hh, hw, hh, cars[3]);
-            }
-          }
-
-          if (countdown !== null && countdown >= 0) {
-            ctx.fillStyle = "rgba(6,8,12,.45)";
-            ctx.fillRect(0, 0, w, h);
-            ctx.fillStyle = "#e8eef7";
-            ctx.font = "bold " + Math.min(w, h) * 0.18 + "px system-ui";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            const msg = countdown > 0 ? String(countdown) : "GO";
-            ctx.fillText(msg, w / 2, h / 2);
-          }
-
-          let hud = "";
-          if (geom && cars[0]) {
-            const t = TRACKS[config.trackIndex];
-            const cur = Math.min(config.laps, cars[0].completedLaps + 1);
-            const sp0 = Math.hypot(cars[0].vx, cars[0].vy);
-            const kph = Math.round(sp0 * 0.12);
-            hud = `${t.name} · ${kph} km/h · Lap ${cur}/${config.laps}`;
-            if (cars[0].finished) hud += " · Finished P" + cars[0].finishRank;
-          }
-          hudEl.textContent = hud;
-
-          const allDone = !!(cars.length && cars.slice(0, config.players).every((c) => c.finished));
-          resultsActive = allDone && !!geom && countdown === null;
-          if (resultsActive) touchHud.classList.add("hidden");
-          else if (geom && menuEl.classList.contains("hidden")) touchHud.classList.remove("hidden");
-          if (allDone && geom) {
-            ctx.fillStyle = "rgba(6,8,12,.55)";
-            ctx.fillRect(0, 0, w, h);
-            ctx.fillStyle = "#e8eef7";
-            ctx.font = "600 " + Math.min(w, h) * 0.06 + "px system-ui";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            const lines = cars
-              .slice(0, config.players)
-              .map((c) => `P${c.i + 1}: place ${c.finishRank}`)
-              .join(" · ");
-            ctx.fillText("Race complete", w / 2, h / 2 - 20);
-            ctx.font = "400 " + Math.min(w, h) * 0.035 + "px system-ui";
-            ctx.fillText(lines, w / 2, h / 2 + 22);
-            ctx.fillText("Tap or press Enter for menu", w / 2, h / 2 + 58);
-          }
-
           requestAnimationFrame(frame);
         }
 
-        window.addEventListener(
-          "pointerdown",
-          (e) => {
-            if (!resultsActive || !geom) return;
-            if (!menuEl.classList.contains("hidden")) return;
+        function showMenu() {
+          overlay.classList.remove("hidden");
+          hudEl.classList.add("hidden");
+          touchCtrl.classList.add("hidden");
+          running = false;
+          overlay.innerHTML = `
+            <h1>Aurora Ridge</h1>
+            <p class="sub">Pseudo‑3D highway run · stars · nitro · traffic · three regions.</p>
+            <div class="rows">
+              ${REGIONS.map(
+                (r, i) =>
+                  `<button type="button" class="${i === 0 ? "primary" : ""}" data-r="${i}"><strong>${r.name}</strong><span>${r.tag}<br />Goal · ${(
+                    r.goal / 1000
+                  ).toFixed(0)} km run</span></button>`
+              ).join("")}
+            </div>
+            <div class="rows">
+              <button type="button" id="howBtn">How to play</button>
+            </div>
+            <p class="hint">
+              Keyboard: ← → steer · ↑ gas · ↓ brake · Space nitro · Mouse: hold left on road = gas + steering · Touch: slide bar = steer, GAS &amp; NITRO buttons
+            </p>
+          `;
+          overlay.querySelectorAll("[data-r]").forEach((b) =>
+            b.addEventListener("click", () => {
+              regionIndex = +b.getAttribute("data-r");
+              startGame();
+            })
+          );
+          overlay.querySelector("#howBtn").addEventListener("click", () => {
+            alert(
+              "Reach the run distance shown in the HUD. Collect star shards for nitro refill and speed bursts. Crimson traffic slows you — slip past cleanly. Emerald boost strips add pace. Brake before tight bends."
+            );
+          });
+        }
+
+        function showEnd(success) {
+          overlay.classList.remove("hidden");
+          touchCtrl.classList.add("hidden");
+          hudEl.classList.add("hidden");
+          const R = REGIONS[regionIndex];
+          overlay.innerHTML = `
+            <h1>${success ? "Run complete!" : "Crashed out"}</h1>
+            <p class="sub">
+              Stars: ${starsCollected} · Distance: ${((player.z / 1000) | 0)} / ${(R.goal / 1000) | 0} km
+            </p>
+            <div class="rows">
+              <button type="button" class="primary" id="again">Run again</button>
+              <button type="button" id="menu">Regions</button>
+            </div>
+          `;
+          overlay.querySelector("#again").addEventListener("click", startGame);
+          overlay.querySelector("#menu").addEventListener("click", showMenu);
+        }
+
+        function startGame() {
+          buildRoad();
+          player = { z: SEG_LEN * 20, x: 0, speed: 12000, maxSpeed: 26000, accel: 15500, brake: 22000, nitro: 100 };
+          steerSmooth = 0;
+          starsCollected = 0;
+          running = true;
+          gameOver = false;
+          won = false;
+          lastT = performance.now();
+          overlay.classList.add("hidden");
+          hudEl.classList.remove("hidden");
+          touchCtrl.classList.remove("hidden");
+        }
+
+        function bindInputs() {
+          if (controlsBound) return;
+          controlsBound = true;
+          window.addEventListener(
+            "keydown",
+            (e) => {
+              keys[e.code] = true;
+              keys[e.key] = true;
+            },
+            false
+          );
+          window.addEventListener(
+            "keyup",
+            (e) => {
+              keys[e.code] = false;
+              keys[e.key] = false;
+            },
+            false
+          );
+
+          function padSteer(ev) {
+            ev.preventDefault();
+            const cx = ev.touches && ev.touches[0] ? ev.touches[0].clientX : ev.clientX;
+            const r = steerPad.getBoundingClientRect();
+            touchSteer = Math.max(-1, Math.min(1, ((cx - r.left) / r.width) * 2 - 1));
+          }
+          steerPad.addEventListener("touchstart", padSteer, { passive: false });
+          steerPad.addEventListener("touchmove", padSteer, { passive: false });
+          steerPad.addEventListener("touchend", () => (touchSteer = 0), { passive: false });
+
+          const setG = (v) => (e) => {
             e.preventDefault();
-            setMenu();
-            resultsActive = false;
-            geom = null;
-            cars = [];
-          },
-          true
-        );
+            touchGas = v;
+          };
+          gasBtn.addEventListener("touchstart", setG(1), { passive: false });
+          gasBtn.addEventListener("touchend", setG(0), { passive: false });
+          gasBtn.addEventListener("mousedown", () => (touchGas = 1));
+          gasBtn.addEventListener("mouseup", () => (touchGas = 0));
 
+          const setB = (v) => (e) => {
+            e.preventDefault();
+            touchBoost = v;
+          };
+          boostBtn.addEventListener("touchstart", setB(1), { passive: false });
+          boostBtn.addEventListener("touchend", setB(0), { passive: false });
+          boostBtn.addEventListener("mousedown", () => (touchBoost = 1));
+          boostBtn.addEventListener("mouseup", () => (touchBoost = 0));
+
+          function fromCanvas(ev) {
+            const r = canvas.getBoundingClientRect();
+            pointerSteer = Math.max(-1, Math.min(1, ((ev.clientX - r.left) / r.width) * 2 - 1));
+            pointerGas = (ev.buttons & 1) !== 0;
+            pointerBoost = (ev.buttons & 2) !== 0;
+          }
+          canvas.addEventListener("pointerdown", (e) => {
+            if (!running) return;
+            if (e.pointerType !== "mouse") return;
+            mouseMode = true;
+            try {
+              canvas.setPointerCapture(e.pointerId);
+            } catch (_) {}
+            fromCanvas(e);
+          });
+          canvas.addEventListener("pointermove", (e) => {
+            if (!mouseMode || e.pointerType !== "mouse") return;
+            fromCanvas(e);
+          });
+          canvas.addEventListener("pointerup", () => {
+            mouseMode = false;
+            pointerGas = false;
+            pointerSteer = 0;
+            pointerBoost = false;
+          });
+        }
+
+        bindInputs();
+        showMenu();
         requestAnimationFrame(frame);
-
-        setMenu();
       })();
     </script>
   </body>
